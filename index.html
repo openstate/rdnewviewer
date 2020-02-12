@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html;charset=utf-8"/>
+		<title>RD New Viewer</title>
+		<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.6.0/dist/leaflet.css" integrity="sha256-SHMGCYmST46SoyGgo4YR/9AlK1vf3ff84Aq9yK4hdqM=" crossorigin="anonymous">
+		<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet-gesture-handling@1.1.8/dist/leaflet-gesture-handling.min.css" integrity="sha256-LhJiGL8zdnwmqQgxK45GXouxZnYhMrDdor4wyLxKxSg=" crossorigin="anonymous">
+		<script src="https://cdn.jsdelivr.net/npm/leaflet@1.6.0/dist/leaflet.js" integrity="sha256-fNoRrwkP2GuYPbNSJmMJOCyfRB2DhPQe0rGTgzRsyso=" crossorigin="anonymous"></script>
+		<script src="https://cdn.jsdelivr.net/npm/proj4@2.6.0/dist/proj4.js" integrity="sha256-GfiEM8Xh30rkF6VgCIKZXLhoPT8hWwijiHkiKeJY82Y=" crossorigin="anonymous"></script>
+		<script src="https://cdn.jsdelivr.net/npm/leaflet-gesture-handling@1.1.8/dist/leaflet-gesture-handling.min.js" integrity="sha256-47jI9sFtLK5ME+uJB6Sn+zluzXAQQmnetxnKkLPHQSY=" crossorigin="anonymous"></script>
+		<!-- <script src="https://cdn.jsdelivr.net/npm/chroma-js@2.1.0/chroma.min.js" integrity="sha256-gX8uuyxN8stSMHWO9arnnKyenTOALaVAcVB3b6P87e4=" crossorigin="anonymous"></script> -->
+		<style>
+			html, body, #nlmaps-holder, #input {
+				height: 100%;
+			}
+			#nlmaps-holder {
+				width: 80%;
+				position: absolute;
+				left: 0;
+				top: 0;
+			}
+			#input {
+				width: 20%;
+				position: absolute;
+				right: 0;
+				top: 0;
+			}
+			textarea#data {
+				width: 100%;
+				height: 80%;
+			}
+			button {
+				width: 100%;
+			}
+			body {
+				overflow: hidden;
+				margin: 0;
+			}
+			.notext {
+				font-style: italic;
+				color: #666;
+			}
+		</style>
+	</head>
+	<body>
+		<div id="nlmaps-holder"></div>
+		<div id="input">
+			Voer hier <code>X Y [radius|x] [tekst]</code> in:<br>
+			<textarea id="data">155000 463000 2000 Popup tekst</textarea>
+			Zowel Rijksdriehoeksco&ouml;rdinaten (<abbr title="European Petroleum Survey Group">EPSG</abbr> 28992 / <i>RD New</i>) als <abbr title="World Geodetic System 1984">WGS 84</abbr> co&ouml;rdinaten werken, met zowel punten als komma's. Als scheidingsteken kunnen spatie(s), tab(s) en <code>;</code> gebruikt worden.<br>
+			<button>Laat zien</button>
+		</div>
+		<script>
+			proj4.defs('EPSG:28992', '+proj=sterea +lat_0=52.15616055555555 +lon_0=5.38763888888889 +k=0.9999079 +x_0=155000 +y_0=463000 +ellps=bessel +towgs84=565.417,50.3319,465.552,-0.398957,0.343988,-1.8774,4.0725 +units=m +no_defs');
+			const convert = proj4('EPSG:28992').inverse;
+  			var map = L.map('nlmaps-holder', {
+				minZoom: 8,
+				zoomDelta: 0.5,
+				zoomSnap: 0.25,
+				gestureHandling: true,
+				gestureHandlingOptions: {
+					text: {
+						touch: 'gebruik 2 vingers om te kaart te bewegen',
+						scroll: 'gebruik ctrl + scroll om in te zoomen',
+						scrollMac: 'gebruik \u2318 + scroll om in te zoomen',
+					},
+				},
+			});
+			map.attributionControl.setPrefix(false);
+			L.tileLayer('https://geodata.nationaalgeoregister.nl/tiles/service/wmts/brtachtergrondkaartwater/EPSG:3857/{z}/{x}/{y}.png').addTo(map);
+			map.zoomControl.setPosition('bottomleft');
+			// Fit NL in view
+			map.fitBounds([[53.63, 7.19],[50.73, 3.51]]);
+
+			function parseline(num1, num2, radius, text) {
+				var num1 = Number((num1||'-1').replace(/,/g,'.'));
+				var num2 = Number((num2||'-1').replace(/,/g,'.'));
+				var max = Math.max(num1, num2);
+				var min = Math.min(num1, num2);
+				var coordinates;
+				if (min < 0 || min > 300000 || max < 289000 || max > 629000)
+					return null;
+				if (min > 3 && min < 10 && max > 50 && max < 54) {
+					coordinates = [min, max];
+				} else {
+					coordinates = convert([min, max]);
+				}
+				var radius = Number(radius) || NaN;
+				return {
+					type: 'Feature',
+					properties: text ? {popupContent: text} : {},
+					geometry: {
+						type: 'Point',
+						radius,
+						coordinates,
+					}
+				};
+			}
+			var redIcon = new L.Icon({
+				iconUrl: 'https://rawcdn.githack.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+				shadowUrl: 'https://cdn.jsdelivr.net/npm/leaflet@1.6.0/dist/images/marker-shadow.png',
+				iconSize: [25, 41],
+				iconAnchor: [12, 41],
+				popupAnchor: [1, -34],
+				shadowSize: [41, 41],
+			});
+
+			var layer = false;
+			var domData = document.getElementById('data');
+			//var reg = /^\s*(?<num1>[0-9]+([\.,][0-9]+)?)[\s;]+(?<num2>[0-9]+([\.,][0-9]+)?)([\s;]+(?<radius>\S+)([\s;]+(?<text>.*))?)?$/; //FF and IE do not support named groups :(
+			var reg = /^\s*([0-9]+([\.,][0-9]+)?)[\s;]+([0-9]+([\.,][0-9]+)?)([\s;]+(\S+)([\s;]+(.*))?)?\s*$/;
+			function handle() {
+				//var features = domData.value.split(/\r?\n/).map(x => x.trim().split(/[\s;]+/, 4)).map(x=>parseline(x)).filter(x=>x);
+				var features = domData.value.split(/\r?\n/).map(x=>{
+					//var [,num1,,num2,,,radius,,popupText] = x.match(reg); // IE11 does not support ES6 Destructuring assignments
+					var res = x.match(reg);
+					if (res) {
+						var num1 = res[1], num2 = res[3], radius = res[6], text = res[8];
+						return parseline(num1, num2, radius, text);
+					}
+				}).filter(x=>x);
+				var geojson = {type: 'FeatureCollection', features};
+				console.log(JSON.stringify(geojson));
+				if (layer) {
+					map.removeLayer(layer);
+				}
+				layer = L.geoJSON(geojson, {
+					style: function (feature) {
+						return {
+							weight: 0,
+							fillColor: '#D00',//color(feature.properties),
+							fillOpacity: 0.7,
+						};
+					},
+					pointToLayer: function (feature, latlng) {
+						return isNaN(feature.geometry.radius) ?
+							L.marker(latlng, {icon: redIcon}) :
+							L.circle(latlng, {radius: Math.min(feature.geometry.radius, 100000)});
+					},
+    			}).bindPopup(function (l) {
+					return l.feature.properties.popupContent || '<span class="notext">geen tekst</span>';
+				}).addTo(map);
+			}
+			domData.onchange = handle;
+			domData.onkeyup = handle;
+			domData.onkeydown = handle;
+			domData.onkeypress = handle;
+			domData.onpaste = handle;
+			handle();
+			map.attributionControl.addAttribution('© Kadaster / Centraal Bureau voor de Statistiek'); // Gemeente data
+		</script>
+	</body>
+</html>
