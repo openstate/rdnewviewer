@@ -129,14 +129,14 @@
 			var reg = /^\s*([0-9]+([\.,][0-9]+)?)[\s;]+([0-9]+([\.,][0-9]+)?)([\s;]+(\S+)([\s;]+(.*))?)?\s*$/;
 			function handle() {
 				//var features = domData.value.split(/\r?\n/).map(x => x.trim().split(/[\s;]+/, 4)).map(x=>parseline(x)).filter(x=>x);
-				var features = domData.value.split(/\r?\n/).map(x=>{
+				var features = domData.value.split(/\r?\n/).map(function (x) {
 					//var [,num1,,num2,,,radius,,popupText] = x.match(reg); // IE11 does not support ES6 Destructuring assignments
 					var res = x.match(reg);
 					if (res) {
 						var num1 = res[1], num2 = res[3], radius = res[6], text = res[8];
 						return parseline(num1, num2, radius, text);
 					}
-				}).filter(x=>x);
+				}).filter(function (x) { return x;});
 				var geojson = {type: 'FeatureCollection', features};
 				console.log(JSON.stringify(geojson));
 				if (layer) {
