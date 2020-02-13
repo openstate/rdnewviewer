@@ -19,3 +19,12 @@ Only *Dutch* bounds, for *RD New*: <code>0 &le; X &le; 300000</code> and <code>2
 `radius` is either the radius in meters for a circle marker (maximized at `100000` / 100km), or a non number to use a marker (<abbr title="for example (latin: exempli gratia)">e.g.</abbr> `x`).
 
 `text` can contain HTML and spaces.
+
+# ToDo
+
+* Probably recode in Svelte/Sapper
+* Create code to store (maybe in a GitHub gist?)
+* Create `<iframe>` embed code (option without store is to use deflate encoded in `src=#hash` ?))
+* Option to change base map tiles / zoom / center
+* Option to change colors per item / chomajs
+* Zipcode geocoder
