@@ -57,7 +57,7 @@
 			 * https://github.com/Leaflet/Leaflet/issues/3575
 			 */
 			(function(){
-				var originalInitTile = L.GridLayer.prototype._initTile
+				var originalInitTile = L.GridLayer.prototype._initTile;
 				L.GridLayer.include({
 					_initTile: function (tile) {
 						originalInitTile.call(this, tile);
@@ -70,7 +70,7 @@
 				});
 			})();
 			proj4.defs('EPSG:28992', '+proj=sterea +lat_0=52.15616055555555 +lon_0=5.38763888888889 +k=0.9999079 +x_0=155000 +y_0=463000 +ellps=bessel +towgs84=565.417,50.3319,465.552,-0.398957,0.343988,-1.8774,4.0725 +units=m +no_defs');
-			const convert = proj4('EPSG:28992').inverse;
+			var convert = proj4('EPSG:28992').inverse;
 			var map = L.map('nlmaps-holder', {
 				minZoom: 8,
 				zoomDelta: 0.5,
@@ -91,8 +91,8 @@
 			map.fitBounds([[53.63, 7.19],[50.73, 3.51]]);
 
 			function parseline(num1, num2, radius, text) {
-				var num1 = Number((num1||'-1').replace(/,/g,'.'));
-				var num2 = Number((num2||'-1').replace(/,/g,'.'));
+				num1 = Number((num1||'-1').replace(/,/g,'.'));
+				num2 = Number((num2||'-1').replace(/,/g,'.'));
 				var max = Math.max(num1, num2);
 				var min = Math.min(num1, num2);
 				var coordinates;
@@ -103,14 +103,14 @@
 				} else {
 					coordinates = convert([min, max]);
 				}
-				var radius = Number(radius) || NaN;
+				radius = Number(radius) || NaN;
 				return {
 					type: 'Feature',
 					properties: text ? {popupContent: text} : {},
 					geometry: {
 						type: 'Point',
-						radius,
-						coordinates,
+						radius: radius,
+						coordinates: coordinates,
 					}
 				};
 			}
@@ -137,7 +137,7 @@
 						return parseline(num1, num2, radius, text);
 					}
 				}).filter(function (x) { return x;});
-				var geojson = {type: 'FeatureCollection', features};
+				var geojson = {type: 'FeatureCollection', features: features};
 				console.log(JSON.stringify(geojson));
 				if (layer) {
 					map.removeLayer(layer);
