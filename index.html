@@ -1,8 +1,9 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
 	<head>
-		<meta http-equiv="Content-Type" content="text/html;charset=utf-8"/>
-		<title>RD New Viewer</title>
+		<meta charset="utf-8">
+		<title>RD New Viewer</title>>
+		<meta name="viewport" content="width=600">
 		<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.6.0/dist/leaflet.css" integrity="sha256-SHMGCYmST46SoyGgo4YR/9AlK1vf3ff84Aq9yK4hdqM=" crossorigin="anonymous">
 		<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet-gesture-handling@1.1.8/dist/leaflet-gesture-handling.min.css" integrity="sha256-LhJiGL8zdnwmqQgxK45GXouxZnYhMrDdor4wyLxKxSg=" crossorigin="anonymous">
 		<script src="https://cdn.jsdelivr.net/npm/leaflet@1.6.0/dist/leaflet.js" integrity="sha256-fNoRrwkP2GuYPbNSJmMJOCyfRB2DhPQe0rGTgzRsyso=" crossorigin="anonymous"></script>
@@ -138,7 +139,7 @@
 					}
 				}).filter(function (x) { return x;});
 				var geojson = {type: 'FeatureCollection', features: features};
-				console.log(JSON.stringify(geojson));
+				//console.log(JSON.stringify(geojson));
 				if (layer) {
 					map.removeLayer(layer);
 				}
@@ -158,12 +159,16 @@
 				}).bindPopup(function (l) {
 					return l.feature.properties.popupContent || '<span class="notext">geen tekst</span>';
 				}).addTo(map);
+				localStorage["input"] = domData.value;
 			}
 			domData.onchange = handle;
 			domData.onkeyup = handle;
 			domData.onkeydown = handle;
 			domData.onkeypress = handle;
 			domData.onpaste = handle;
+			if (localStorage["input"]) {
+				domData.value = localStorage["input"];
+			}
 			handle();
 			map.attributionControl.addAttribution('© Kadaster / Centraal Bureau voor de Statistiek'); // Gemeente data
 		</script>
