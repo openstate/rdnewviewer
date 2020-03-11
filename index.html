@@ -2,7 +2,7 @@
 <html>
 	<head>
 		<meta charset="utf-8">
-		<title>RD New Viewer</title>>
+		<title>RD New Viewer</title>
 		<meta name="viewport" content="width=600">
 		<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.6.0/dist/leaflet.css" integrity="sha256-SHMGCYmST46SoyGgo4YR/9AlK1vf3ff84Aq9yK4hdqM=" crossorigin="anonymous">
 		<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet-gesture-handling@1.1.8/dist/leaflet-gesture-handling.min.css" integrity="sha256-LhJiGL8zdnwmqQgxK45GXouxZnYhMrDdor4wyLxKxSg=" crossorigin="anonymous">
@@ -97,7 +97,7 @@
 				var max = Math.max(num1, num2);
 				var min = Math.min(num1, num2);
 				var coordinates;
-				if (min < 0 || min > 300000 || max < 289000 || max > 629000)
+				if (min < 0 || min > 300000 || min > 10 && max < 289000 || max > 629000)
 					return null;
 				if (min > 3 && min < 10 && max > 50 && max < 54) {
 					coordinates = [min, max];
